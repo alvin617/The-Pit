@@ -11,7 +11,7 @@ canvas{display:block}
 </style>
 </head>
 <body>
-<div id="hud">❤️ HP: <span id="hp">100</span> | 🔫 Lantai: <span id="lantai">1</span></div>
+<div id="hud">HP: <span id="hp">100</span> | Lantai: <span id="lantai">1</span></div>
 <div id="floorName">Lantai 1 - Gerbang Awal</div>
 <canvas id="game"></canvas>
 <script>
@@ -19,38 +19,97 @@ const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 let player={x:canvas.width/2,y:100,r:15,hp:100,speed:6};
-let lantai=1, keys={}, traps=[], boss=null, bossBullets=[];
+let lantai=1, keys={}, traps=[], boss=null;
 let eyeX=canvas.width/2, eyeY=canvas.height/2;
-
 function namaLantai(n){
   if(n<=10) return "Gerbang Awal";
   if(n<=20) return "Lorong Gelap";
   if(n<=30) return "Sarung Mata Iblis";
   if(n<=40) return "Lautan Darah";
   if(n<=50) return "Jantung Neraka";
-  if(n<=60) return "Kegelapan Abadi";
   return "DASAR NERAKA";
 }
-
 function buatLantai(){
   traps=[];
-  // JEBAKAN - makin dalam makin banyak
-  let jumlahJebakan = 4 + lantai;
-  for(let i=0;i<jumlahJebakan;i++){
+  let jumlah=4+lantai;
+  for(let i=0;i<jumlah;i++){
     traps.push({x:Math.random()*canvas.width, y:100+Math.random()*(canvas.height-200), w:60, h:20, type: Math.random()>0.5?'duri':'lava'});
   }
-  // BOS SETIAP 10 LANTAI - KEJAR PLAYER
   if(lantai%10===0){
-    let kuat = lantai/10;
-    boss={x:canvas.width/2,y:canvas.height-150,r:40+kuat*5, hp:100, speed:1.5+kuat*0.4, dmg:15+kuat*5, nama:"BOS LANTAI "+lantai};
+    let kuat=lantai/10;
+    boss={x:canvas.width/2,y:canvas.height-150,r:40+kuat*5, speed:1.5+kuat*0.4, dmg:15+kuat*5, nama:"BOS LANTAI "+lantai};
   } else boss=null;
 }
 buatLantai();
-
 document.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
 document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
-
+// Kontrol HP - sentuh layar
+canvas.addEventListener('touchmove',e=>{player.x=e.touches[0].clientX; player.y=e.touches[0].clientY; e.preventDefault();},{passive:false});
 function update(){
   if(keys['w']||keys['arrowup']) player.y-=player.speed;
   if(keys['s']||keys['arrowdown']) player.y+=player.speed;
- 
+  if(keys['a']||keys['arrowleft']) player.x-=player.speed;
+  if(keys['d']||keys['arrowright']) player.x+=player.speed;
+  player.x=Math.max(20,Math.min(canvas.width-20,player.x));
+  player.y=Math.max(20,Math.min(canvas.height-20,player.y));
+  traps.forEach(t=>{
+    if(player.x>t.x && player.x<t.x+t.w && player.y>t.y-10 && player.y<t.y+t.h+10){
+      player.hp-=0.5; document.getElementById('hp').textContent=Math.floor(player.hp);
+    }
+  });
+  if(boss){
+    let dx=player.x-boss.x, dy=player.y-boss.y;
+    let jarak=Math.hypot(dx,dy)||1;
+    boss.x+=dx/jarak*boss.speed; boss.y+=dy/jarak*boss.speed;
+    if(jarak < boss.r+player.r){
+      player.hp-=boss.dmg*0.05; document.getElementById('hp').textContent=Math.floor(player.hp);
+      player.x+=dx/jarak*10; player.y+=dy/jarak*10;
+    }
+  }
+  if(player.hp<=0){alert("KAMU KENA JEBAKAN / BOS DI LANTAI "+lantai); location.reload();}
+  if(player.y>canvas.height-25){
+    lantai++; player.y=30; player.x=canvas.width/2; player.hp=Math.min(100,player.hp+15);
+    document.getElementById('lantai').textContent=lantai;
+    document.getElementById('floorName').textContent="Lantai "+lantai+" - "+namaLantai(lantai);
+    document.getElementById('hp').textContent=Math.floor(player.hp);
+    buatLantai();
+  }
+}
+function draw(){
+  ctx.fillStyle='#080808'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  eyeX += (player.x-eyeX)*0.02; eyeY += (player.y-eyeY)*0.02;
+  ctx.fillStyle='#1a0000'; ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height/2,180,100,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height/2,120,70,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(eyeX,eyeY,35,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(eyeX,eyeY,15,0,Math.PI*2); ctx.fill();
+  traps.forEach(t=>{
+    if(t.type==='duri'){
+      ctx.fillStyle='#888'; ctx.fillRect(t.x,t.y+t.h-5,t.w,5);
+      ctx.fillStyle='silver';
+      for(let i=0;i<4;i++){ctx.beginPath(); ctx.moveTo(t.x+i*15,t.y+t.h); ctx.lineTo(t.x+i*15+7,t.y); ctx.lineTo(t.x+i*15+14,t.y+t.h); ctx.fill();}
+    } else {
+      ctx.fillStyle='#ff4400'; ctx.fillRect(t.x,t.y,t.w,t.h);
+      ctx.fillStyle='#ffff00'; ctx.fillRect(t.x+5,t.y+5,t.w-10,8);
+    }
+  });
+  if(boss){
+    ctx.fillStyle='#ff00ff'; ctx.beginPath(); ctx.arc(boss.x,boss.y,boss.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(boss.x-15,boss.y-10,8,0,Math.PI*2); ctx.arc(boss.x+15,boss.y-10,8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(boss.x-15,boss.y-10,4,0,Math.PI*2); ctx.arc(boss.x+15,boss.y-10,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='white'; ctx.font='18px Arial'; ctx.fillText(boss.nama,boss.x-70,boss.y-boss.r-10);
+  }
+  let px=player.x, py=player.y;
+  ctx.strokeStyle='#00ff88'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(px,py+5); ctx.lineTo(px-10,py+25); ctx.moveTo(px,py+5); ctx.lineTo(px+10,py+25); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px,py-10); ctx.lineTo(px,py+10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px,py-5); ctx.lineTo(px-15,py+5); ctx.moveTo(px,py-5); ctx.lineTo(px+15,py+5); ctx.stroke();
+  ctx.fillStyle='#00ff88'; ctx.beginPath(); ctx.arc(px,py-20,12,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(px+4,py-22,2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#00aaff'; ctx.fillRect(0,canvas.height-15,canvas.width,15);
+  ctx.fillStyle='white'; ctx.fillText('TURUN - HINDARI JEBAKAN',canvas.width/2-100,canvas.height-2);
+}
+function loop(){update(); draw(); requestAnimationFrame(loop);}
+loop();
+</script>
+</body>
+</html>
