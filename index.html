@@ -3,71 +3,103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>THE PIT - LARI TURUN</title>
+<title>THE PIT</title>
 <style>
 body{margin:0;background:#000;overflow:hidden;font-family:Arial;color:white;touch-action:none}
 canvas{display:block}
-#hud{position:fixed;top:10px;left:10px;font-size:18px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:10px;z-index:99;display:none}
-#floorName{position:fixed;top:10px;right:10px;font-size:16px;font-weight:bold;color:#ff4444;z-index:99;background:rgba(0,0,0,.6);padding:8px;border-radius:10px;display:none}
-#hpBarWrap{position:fixed;top:50px;left:10px;right:10px;z-index:99;display:none}
-#hpText{font-size:22px;font-weight:bold;margin-bottom:5px;text-shadow:2px 2px 0 black}
+#hud,#floorName,#hpBarWrap,#controls{display:none}
+#hud{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:10px;z-index:99}
+#floorName{position:fixed;top:10px;right:10px;color:#ff4444;background:rgba(0,0,0,.6);padding:8px;border-radius:10px;z-index:99}
+#hpBarWrap{position:fixed;top:50px;left:10px;right:10px;z-index:99}
 #hpBarBg{width:100%;height:28px;background:#333;border:3px solid white;border-radius:15px;overflow:hidden}
-#hpBar{width:100%;height:100%;background:linear-gradient(90deg,#00ff00,#aaff00);transition:width 0.2s}
-#hpBar.low{background:linear-gradient(90deg,#ff0000,#ff6600)}
-#controls{position:fixed;bottom:30px;left:0;right:0;display:none;justify-content:space-between;padding:0 20px;z-index:99;align-items:flex-end}
+#hpBar{width:100%;height:100%;background:#00ff00}
+#controls{position:fixed;bottom:30px;left:0;right:0;justify-content:space-between;padding:0 20px;z-index:99;align-items:flex-end}
 #dpad{display:grid;grid-template-columns:60px 60px 60px;gap:5px}
-#dpad button{width:60px;height:60px;font-size:24px;border-radius:15px;background:rgba(255,255,255,.25);color:white;border:2px solid white;touch-action:none}
-#dpad button:active{background:#00ff88;color:black}
-#downBtn{width:80px;height:80px;font-size:14px;border-radius:50%;background:#00aaff;color:white;border:2px solid white;font-weight:bold;touch-action:none}
-#startScreen{position:fixed;inset:0;background:#000;z-index:1000;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px}
-#startScreen h1{font-size:44px;color:#FFD700;margin:0;line-height:1.1}
-#startBtn{margin-top:30px;padding:18px 35px;font-size:24px;font-weight:bold;background:#ff4444;border:none;border-radius:20px;color:white}
+#dpad button{width:60px;height:60px;font-size:24px;border-radius:15px;background:rgba(255,255,255,.25);color:white;border:2px solid white}
+#downBtn{width:80px;height:80px;border-radius:50%;background:#00aaff;color:white;border:2px solid white;font-weight:bold}
+#startScreen{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px}
+#startScreen h1{font-size:42px;color:#FFD700;margin:10px 0;line-height:1.1}
+#startBtn{margin-top:30px;padding:20px 40px;font-size:26px;font-weight:bold;background:#ff4444;border:3px solid white;border-radius:20px;color:white;cursor:pointer}
 #celebration{position:fixed;inset:0;display:none;justify-content:center;align-items:center;flex-direction:column;z-index:999;text-align:center;background:rgba(0,0,0,.7)}
 #celebration.show{display:flex}
-#celebTitle{font-size:38px;font-weight:900;color:#FFD700}
-#celebSub{font-size:20px;margin-top:10px}
-#celebBtn{margin-top:20px;padding:15px 30px;font-size:20px;font-weight:bold;background:#00ff88;border:none;border-radius:20px}
-#confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:998;display:none}
 </style>
 </head>
 <body>
 <div id="hud">LANTAI: <span id="lantai">1</span></div>
-<div id="floorName">Lantai 1 - Gerbang Awal</div>
-<div id="hpBarWrap">
-  <div id="hpText">❤️ HP: <span id="hp">100</span> / 100</div>
-  <div id="hpBarBg"><div id="hpBar"></div></div>
-</div>
+<div id="floorName">Lantai 1</div>
+<div id="hpBarWrap"><div>❤️ HP: <span id="hp">100</span> / 100</div><div id="hpBarBg"><div id="hpBar"></div></div></div>
 <canvas id="game"></canvas>
-<canvas id="confettiCanvas"></canvas>
-
 <div id="startScreen">
-  <div style="font-size:60px">🥷</div>
-  <h1>LARI TURUN<br>VS MATA IBLIS</h1>
-  <button id="startBtn" onclick="mulaiGame()">▶️ MULAI MAIN</button>
+<div style="font-size:70px">🥷</div>
+<h1>LARI TURUN<br>VS MATA IBLIS</h1>
+<div style="color:#aaa;margin-top:10px">Tap tombol bawah buat main</div>
+<button id="startBtn">▶️ MULAI MAIN</button>
 </div>
-
-<div id="celebration">
-  <div id="celebTitle"></div>
-  <div id="celebSub"></div>
-  <button id="celebBtn" onclick="tutupCelebration()">LANJUT MAIN ▶️</button>
-</div>
-
-<div id="controls">
-  <div id="dpad">
-    <div></div><button id="btnUp">⬆️</button><div></div>
-    <button id="btnLeft">⬅️</button><button id="btnDown">⬇️</button><button id="btnRight">➡️</button>
-  </div>
-  <button id="downBtn">TURUN<br>▼</button>
-</div>
-
+<div id="celebration"><div id="celebTitle"></div><div id="celebSub"></div><button onclick="tutupCelebration()" style="padding:15px 30px;font-size:20px;background:#00ff88;border:none;border-radius:20px;margin-top:20px">LANJUT ▶️</button></div>
+<div id="controls"><div id="dpad"><div></div><button id="btnUp">⬆️</button><div></div><button id="btnLeft">⬅️</button><button id="btnDown">⬇️</button><button id="btnRight">➡️</button></div><button id="downBtn">TURUN<br>▼</button></div>
 <script>
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-let player={x:canvas.width/2,y:200,r:15,hp:100,speed:6,vy:0,onGround:false};
-let lantai=1, keys={}, traps=[], boss=null, platforms=[];
-let paused=true, sudahRayain50=false, sudahRayain100=false;
-const confetti=document.getElementById('confettiCanvas');
-const cctx=confetti.getContext('2d');
-confetti.width=window.innerWidth; confetti.height=window.innerHeight;
-let conf
+let player={x:canvas.width/2,y:200,hp:100,speed:6,vy:0,onGround:false};
+let lantai=1, keys={}, traps=[], boss=null, platforms=[], paused=true;
+function mulaiGame(){
+  document.getElementById('startScreen').style.display='none';
+  document.getElementById('hud').style.display='block';
+  document.getElementById('floorName').style.display='block';
+  document.getElementById('hpBarWrap').style.display='block';
+  document.getElementById('controls').style.display='flex';
+  paused=false;
+}
+document.getElementById('startBtn').addEventListener('click', mulaiGame);
+document.getElementById('startBtn').addEventListener('touchstart', function(e){ e.preventDefault(); mulaiGame(); }, {passive:false});
+document.getElementById('startScreen').addEventListener('click', function(e){ if(e.target.id!=='startBtn'){ mulaiGame(); } });
+function tutupCelebration(){ document.getElementById('celebration').classList.remove('show'); paused=false; }
+function updateHP(){ let h=Math.max(0,Math.floor(player.hp)); document.getElementById('hp').textContent=h; document.getElementById('hpBar').style.width=h+'%'; }
+function buatLantai(){
+  traps=[]; platforms=[];
+  for(let y=200; y<canvas.height-100; y+=140){ let w=140+Math.random()*80; let x=Math.random()*(canvas.width-w); platforms.push({x:x,y:y,w:w,h:20}); }
+  platforms.unshift({x:canvas.width/2-100,y:260,w:200,h:20});
+  for(let i=0;i<3+lantai;i++){ let p=platforms[Math.floor(Math.random()*platforms.length)]; traps.push({x:p.x+20+Math.random()*(p.w-80), y:p.y-20, w:60, h:20, type: Math.random()>0.5?'duri':'lava'}); }
+  if(lantai%10===0){ let k=lantai/10; boss={x:canvas.width/2,y:canvas.height-250,r:40+k*5,speed:1.5+k*0.4,dmg:15+k*5,nama:"BOS LANTAI "+lantai}; } else boss=null;
+}
+buatLantai();
+document.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
+document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function pegang(id,key){ let b=document.getElementById(id); let s=(e)=>{e.preventDefault();keys[key]=true;}; let f=(e)=>{e.preventDefault();keys[key]=false;}; b.addEventListener('touchstart',s,{passive:false}); b.addEventListener('touchend',f); b.addEventListener('touchcancel',f); b.addEventListener('mousedown',s); b.addEventListener('mouseup',f); b.addEventListener('mouseleave',f); }
+pegang('btnUp','w'); pegang('btnDown','s'); pegang('btnLeft','a'); pegang('btnRight','d'); pegang('downBtn','s');
+function update(){
+  if(paused) return;
+  if(keys['a']) player.x-=player.speed;
+  if(keys['d']) player.x+=player.speed;
+  if(keys['w'] && player.onGround){ player.vy=-13; player.onGround=false; }
+  let drop=(keys['s']);
+  player.vy+=0.6; player.y+=player.vy; player.onGround=false;
+  if(!drop){ platforms.forEach(p=>{ if(player.x>p.x-10 && player.x<p.x+p.w+10 && player.y+35>=p.y && player.y+35<=p.y+18 && player.vy>=0){ player.y=p.y-35; player.vy=0; player.onGround=true; } }); }
+  player.x=Math.max(20,Math.min(canvas.width-20,player.x));
+  if(player.y>canvas.height) player.y=canvas.height-40;
+  traps.forEach(t=>{ if(player.x>t.x && player.x<t.x+t.w && player.y+35>t.y && player.y-20<t.y+t.h){ player.hp-=0.5; updateHP(); } });
+  if(boss){ let dx=player.x-boss.x, dy=player.y-boss.y; let j=Math.hypot(dx,dy)||1; boss.x+=dx/j*boss.speed; boss.y+=dy/j*boss.speed; if(j<boss.r+15){ player.hp-=boss.dmg*0.05; updateHP(); } }
+  if(player.hp<=0){ alert("MATI DI LANTAI "+lantai); location.reload(); }
+  if(player.y>canvas.height-60 && player.onGround && drop){ lantai++; player.y=180; player.x=canvas.width/2; player.vy=0; player.hp=Math.min(100,player.hp+15); document.getElementById('lantai').textContent=lantai; document.getElementById('floorName').textContent="Lantai "+lantai; updateHP(); buatLantai(); }
+}
+function draw(){
+  ctx.fillStyle='#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  let cx=canvas.width/2, cy=130; let dx=player.x-cx, dy=player.y-cy; let j=Math.hypot(dx,dy)||1; let lx=cx+(dx/j)*25, ly=cy+(dy/j)*15;
+  ctx.fillStyle='#1a0000'; ctx.beginPath(); ctx.ellipse(cx,cy,170,90,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy,110,60,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(lx,ly,30,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(lx,ly,12,0,Math.PI*2); ctx.fill();
+  platforms.forEach(p=>{ ctx.fillStyle='#555'; ctx.fillRect(p.x,p.y,p.w,p.h); });
+  traps.forEach(t=>{ if(t.type==='duri'){ ctx.fillStyle='silver'; for(let i=0;i<4;i++){ctx.beginPath(); ctx.moveTo(t.x+i*15,t.y+t.h); ctx.lineTo(t.x+i*15+7,t.y); ctx.lineTo(t.x+i*15+14,t.y+t.h); ctx.fill();} } else { ctx.fillStyle='#ff4400'; ctx.fillRect(t.x,t.y,t.w,t.h); } });
+  if(boss){ ctx.fillStyle='#ff00ff'; ctx.beginPath(); ctx.arc(boss.x,boss.y,boss.r,0,Math.PI*2); ctx.fill(); ctx.fillStyle='white'; ctx.font='18px Arial'; ctx.fillText(boss.nama,boss.x-70,boss.y-boss.r-10); }
+  let px=player.x, py=player.y; ctx.fillStyle='#00ff88'; ctx.beginPath(); ctx.arc(px,py-28,16,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#00ff88'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(px,py-12); ctx.lineTo(px,py+12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px,py-5); ctx.lineTo(px-20,py+8); ctx.moveTo(px,py-5); ctx.lineTo(px+20,py+8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px,py+8); ctx.lineTo(px-14,py+35); ctx.moveTo(px,py+8); ctx.lineTo(px+14,py+35); ctx.stroke();
+}
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+loop(); updateHP();
+</script>
+</body>
+</html>
