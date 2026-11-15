@@ -1,4 +1,168 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>THE PIT</title><style>*{margin:0;box-sizing:border-box}body{background:#0a0a0a;color:#fff;font-family:Arial;text-align:center}.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px}.hero h1{font-size:60px;color:red;letter-spacing:8px}.hero p{color:#ccc;margin:12px 0 20px}.btn{background:red;color:#fff;border:0;padding:16px 30px;font-size:18px;font-weight:bold;border-radius:10px}#g{display:none;padding:12px;max-width:480px;margin:auto}.hud{display:flex;justify-content:space-between;background:#1a1a1a;padding:10px;border-radius:10px;margin-bottom:10px}canvas{width:100%;height:500px;background:#000;border:2px solid red;border-radius:12px}.ctl{display:flex;gap:8px;margin-top:10px}.ctl button{flex:1;padding:16px;font-size:22px;background:#222;color:#fff;border:1px solid #444;border-radius:10px}</style></head><body>
-<div class="hero" id="home"><div style="font-size:40px">🕳️</div><h1>THE PIT</h1><p>Game survival paling menegangkan.<br>Kamu terjebak di dasar jurang.<br>Berani turun sejauh apa?</p><button class="btn" onclick="mulai()">▶ MAIN SEKARANG</button><p style="margin-top:20px;color:#888">🕳️ 100+ Lantai | 🔦 Kumpulkan Loot | 💀 Bertahan Hidup</p></div>
-<div id="g"><div class="hud"><span>🕳️ <b id="d">0</b>m</span><span>⭐ <b id="s">0</b></span><span>❤️ <b id="h">100</b></span></div><canvas id="cv" width="400" height="500"></canvas><div id="m" style="margin-top:8px;color:yellow;font-weight:bold">Mendarat di platform coklat! Ambil 🔦 🍗, hindari 💀</div><div class="ctl"><button ontouchstart="L=1" ontouchend="L=0">◀</button><button onclick="lompat()">⬆ LOMPAT</button><button ontouchstart="R=1" ontouchend="R=0">▶</button></div><button class="btn" style="width:100%;margin-top:10px" onclick="ulang()">🔄 MAIN LAGI</button></div>
-<script>let cv=document.getElementById('cv'),x=cv.getContext('2d'),W=400,H=500,p,pl,it,sk,dp,hp,over,L=0,R=0,raf;function init(){p={x:180,y:80,w:28,h:28,vx:0,vy:0,g:false};pl=[];it=[];sk=0;dp=0;hp=100;over=false;for(let i=0;i<7;i++)buat(i*75+60);document.getElementById('m').textContent='Mendarat di platform coklat! Ambil 🔦 🍗, hindari 💀';upd()}function buat(y){let w=70+Math.random()*60,a=Math.random()*(W-w);pl.push({x:a,y:y,w:w,h:14});if(Math.random()<.6)it.push({x:a+w/2-10,y:y-22,t:Math.random()<.4?'🔦':Math.random()<.5?'🍗':'💀'})}function mulai(){document.getElementById('home').style.display='none';document.getElementById('g').style.display='block';init();loop()}function ulang(){cancelAnimationFrame(raf);init();loop()}function lompat(){if(p.g){p.vy=-13;p.g=false}}function upd(){document.getElementById('d').textContent=dp;document.getElementById('s').textContent=sk;document.getElementById('h').textContent=hp}function loop(){if(over)return;if(L)p.vx=-5;else if(R)p.vx=5;else p.vx*=0.8;p.x+=p.vx;p.vy+=0.6;p.y+=p.vy;if(p.x<0)p.x=0;if(p.x>W-p.w)p.x=W-p.w;p.g=false;for(let q of pl)q.y-=1.2;for(let q of it)q.y-=1.2;dp++;if(dp%75==0)buat(H+10);pl=pl.filter(q=>q.y>-20);it=it.filter(q=>q.y>-20);for(let q of pl){if(p.vy>0&&p.x+p.w>q.x&&p.x<q.x+q.w&&p.y+p.h>q.y&&p.y+p.h<q.y+18){p.y=q.y-p.h;p.vy=0;p.g=true}}for(let i=it.length-1;i>=0;i--){let q=it[i];if(Math.abs(p.x-q.x)<28&&Math.abs(p.y-q.y)<28){if(q.t=='🔦'){sk+=10;document.getElementById('m').textContent='🔦 Senter! +10 Poin'}if(q.t=='🍗'){hp=Math.min(100,hp+20);document.getElementById('m').textContent='🍗 Makan! +20 HP'}if(q.t=='💀'){hp-=30;document.getElementById('m').textContent='💀 Jebakan! -30 HP'}it.splice(i,1);upd()}}if(p.y>H||hp<=0){over=true;document.getElementById('m').textContent='💀 GAME OVER! Kedalaman '+dp+'m | Skor '+sk+' - Pencet MAIN LAGI';gambar();return}upd();gambar();raf=requestAnimationFrame(loop)}function gambar(){x.clearRect(0,0,W,H);x.fillStyle='#111';x.fillRect(0,0,10,H);x.fillRect(W-10,0,10,H);for(let q of pl){x.fillStyle='#8B4513';x.fillRect(q.x,q.y,q.w,q.h)}x.font='20px Arial';x.textAlign='center';for(let q of it)x.fillText(q.t,q.x+10,q.y+16);x.font='26px Arial';x.fillText('🧍',p.x+14,p.y+24)}</script></body></html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>THE PIT - Turun Ke Neraka</title>
+<style>
+body{margin:0;background:#000;overflow:hidden;font-family:Arial;color:white}
+canvas{display:block}
+#hud{position:fixed;top:10px;left:10px;font-size:18px;background:rgba(0,0,0,.6);padding:10px;border-radius:10px}
+#floorName{position:fixed;top:10px;right:10px;font-size:20px;font-weight:bold;color:#ff4444}
+</style>
+</head>
+<body>
+<div id="hud">❤️ HP: <span id="hp">100</span> | 🔫 Lantai: <span id="lantai">1</span> | 💀 Kill: <span id="kill">0</span></div>
+<div id="floorName">Lantai 1 - Gerbang Awal</div>
+<canvas id="game"></canvas>
+<script>
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+let player={x:canvas.width/2,y:canvas.height/2,r:20,hp:100,speed:5};
+let bullets=[], enemyBullets=[], enemies=[], boss=null;
+let lantai=1, kill=0, keys={};
+let eyeX=canvas.width/2, eyeY=canvas.height/2;
+
+function namaLantai(n){
+  if(n<=10) return "Gerbang Awal";
+  if(n<=20) return "Lorong Gelap";
+  if(n<=30) return "Sarung Mata Iblis";
+  if(n<=40) return "Lautan Darah";
+  if(n<=50) return "Ruang Penyiksaan";
+  if(n<=60) return "Jantung Neraka";
+  if(n<=70) return "Kegelapan Abadi";
+  if(n<=80) return "Tahta Kegelapan";
+  if(n<=90) return "Mata Terakhir";
+  return "DASAR NERAKA - THE PIT";
+}
+
+function spawnMusuh(){
+  enemies=[];
+  if(lantai%10===0){
+    // BOS SETIAP 10 LANTAI - SEMAKIN DALAM SEMAKIN KUAT
+    let kekuatan = lantai/10;
+    boss={x:canvas.width/2,y:100,r:50+ kekuatan*5, hp:200 + kekuatan*300, maxHp:200 + kekuatan*300, dmg:10 + kekuatan*5, shootTimer:0, nama:"BOS LANTAI "+lantai+" - "+namaLantai(lantai)};
+  } else {
+    boss=null;
+    let jumlah = 3 + Math.floor(lantai/2);
+    for(let i=0;i<jumlah;i++){
+      enemies.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height/2,r:18,hp:20+lantai*3,shootTimer:Math.random()*100});
+    }
+  }
+}
+spawnMusuh();
+
+document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true; if(e.code==='Space') tembak();});
+document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+canvas.addEventListener('click',e=>{tembak(e.clientX,e.clientY)});
+
+function tembak(tx,ty){
+  let angle = tx!==undefined ? Math.atan2(ty-player.y,tx-player.x) : -Math.PI/2;
+  bullets.push({x:player.x,y:player.y,dx:Math.cos(angle)*10,dy:Math.sin(angle)*10});
+}
+
+function update(){
+  if(keys['w']||keys['arrowup']) player.y-=player.speed;
+  if(keys['s']||keys['arrowdown']) player.y+=player.speed;
+  if(keys['a']||keys['arrowleft']) player.x-=player.speed;
+  if(keys['d']||keys['arrowright']) player.x+=player.speed;
+
+  // TURUN LANTAI - jika sampai bawah layar
+  if(player.y>canvas.height-10){
+    lantai++;
+    player.y=20;
+    player.hp=Math.min(100,player.hp+20); // heal dikit
+    document.getElementById('lantai').textContent=lantai;
+    document.getElementById('floorName').textContent="Lantai "+lantai+" - "+namaLantai(lantai);
+    spawnMusuh();
+  }
+
+  // Gerak peluru player
+  bullets.forEach((b,i)=>{
+    b.x+=b.dx; b.y+=b.dy;
+    // Kena musuh
+    enemies.forEach((en,ei)=>{
+      if(Math.hypot(b.x-en.x,b.y-en.y)<en.r+5){en.hp-=10; bullets.splice(i,1); if(en.hp<=0){enemies.splice(ei,1); kill++;}}
+    });
+    if(boss && Math.hypot(b.x-boss.x,b.y-boss.y)<boss.r+5){boss.hp-=10; bullets.splice(i,1); if(boss.hp<=0){kill+=10; boss=null;}}
+  });
+  bullets=bullets.filter(b=>b.x>0&&b.x<canvas.width&&b.y>0&&b.y<canvas.height);
+
+  // MUSUH NEMBAK
+  enemies.forEach(en=>{
+    en.shootTimer--;
+    if(en.shootTimer<=0){
+      en.shootTimer=80 - Math.min(50,lantai*2);
+      let a=Math.atan2(player.y-en.y,player.x-en.x);
+      enemyBullets.push({x:en.x,y:en.y,dx:Math.cos(a)*(3+lantai*0.1),dy:Math.sin(a)*(3+lantai*0.1)});
+    }
+  });
+  if(boss){
+    boss.shootTimer--;
+    if(boss.shootTimer<=0){
+      boss.shootTimer=40;
+      for(let i=0;i<5;i++){
+        let a=Math.atan2(player.y-boss.y,player.x-boss.x)+ (i-2)*0.2;
+        enemyBullets.push({x:boss.x,y:boss.y,dx:Math.cos(a)*5,dy:Math.sin(a)*5});
+      }
+    }
+    // Bos gerak ke player
+    boss.x+=Math.sign(player.x-boss.x)*1.5;
+  }
+
+  enemyBullets.forEach((b,i)=>{
+    b.x+=b.dx; b.y+=b.dy;
+    if(Math.hypot(b.x-player.x,b.y-player.y)<player.r+5){
+      player.hp-= boss? boss.dmg : 5;
+      enemyBullets.splice(i,1);
+      document.getElementById('hp').textContent=player.hp;
+      if(player.hp<=0){alert("KAMU MATI DI LANTAI "+lantai+"! Kill: "+kill); location.reload();}
+    }
+  });
+  document.getElementById('kill').textContent=kill;
+}
+
+function draw(){
+  ctx.fillStyle='#050505'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  // MATA BESAR DI BELAKANG LAYAR
+  eyeX += (player.x - eyeX)*0.02;
+  eyeY += (player.y - eyeY)*0.02;
+  ctx.fillStyle='#1a0000';
+  ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height/2,400,220,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white';
+  ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height/2,260,160,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='red';
+  ctx.beginPath(); ctx.arc(eyeX,eyeY,80,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='black';
+  ctx.beginPath(); ctx.arc(eyeX,eyeY,35,0,Math.PI*2); ctx.fill();
+
+  // Player
+  ctx.fillStyle='#00ff88'; ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white'; ctx.font='12px Arial'; ctx.fillText('KAMU',player.x-18,player.y+35);
+
+  // Musuh
+  ctx.fillStyle='#ff2222';
+  enemies.forEach(en=>{ctx.beginPath(); ctx.arc(en.x,en.y,en.r,0,Math.PI*2); ctx.fill(); ctx.fillStyle='white'; ctx.fillText(en.hp,en.x-10,en.y-25); ctx.fillStyle='#ff2222';});
+
+  // Bos
+  if(boss){
+    ctx.fillStyle='#ff00ff'; ctx.beginPath(); ctx.arc(boss.x,boss.y,boss.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='white'; ctx.font='20px Arial'; ctx.fillText(boss.nama,boss.x-120,boss.y-boss.r-10);
+    ctx.fillStyle='red'; ctx.fillRect(boss.x-100,boss.y-boss.r-30,200,10);
+    ctx.fillStyle='lime'; ctx.fillRect(boss.x-100,boss.y-boss.r-30,200*(boss.hp/boss.maxHp),10);
+  }
+
+  // Peluru
+  ctx.fillStyle='yellow'; bullets.forEach(b=>{ctx.beginPath(); ctx.arc(b.x,b.y,5,0,Math.PI*2); ctx.fill();});
+  ctx.fillStyle='orange'; enemyBullets.forEach(b=>{ctx.beginPath(); ctx.arc(b.x,b.y,6,0,Math.PI*2); ctx.fill();});
+
+  // Pintu turun
+  ctx.fillStyle='#00aaff'; ctx.fillRect(0,canvas.height-15,canvas.width,15);
+  ctx.fillStyle='white'; ctx.fillText('▼ TURUN KE LANTAI BERIKUTNYA ▼',canvas.width/2-120,canvas.height-2);
+}
+
+function loop(){update(); draw(); requestAnimationFrame(loop);}
+loop();
+</script>
+</body>
+  </html>
