@@ -2,25 +2,56 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>LARI TURUN - Hindari Jebakan & Bos</title>
 <style>
-body{margin:0;background:#000;overflow:hidden;font-family:Arial;color:white}
+body{margin:0;background:#000;overflow:hidden;font-family:Arial;color:white;touch-action:none}
 canvas{display:block}
-#hud{position:fixed;top:10px;left:10px;font-size:18px;background:rgba(0,0,0,.6);padding:10px;border-radius:10px}
-#floorName{position:fixed;top:10px;right:10px;font-size:20px;font-weight:bold;color:#ff4444}
+#hud{position:fixed;top:10px;left:10px;font-size:18px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:10px;z-index:99}
+#floorName{position:fixed;top:10px;right:10px;font-size:16px;font-weight:bold;color:#ff4444;z-index:99;background:rgba(0,0,0,.6);padding:8px;border-radius:10px}
+#hpBarWrap{position:fixed;top:50px;left:10px;right:10px;z-index:99}
+#hpText{font-size:22px;font-weight:bold;margin-bottom:5px;text-shadow:2px 2px 0 black}
+#hpBarBg{width:100%;height:28px;background:#333;border:3px solid white;border-radius:15px;overflow:hidden}
+#hpBar{width:100%;height:100%;background:linear-gradient(90deg,#00ff00,#aaff00);transition:width 0.2s}
+#hpBar.low{background:linear-gradient(90deg,#ff0000,#ff6600)}
+#controls{position:fixed;bottom:30px;left:0;right:0;display:flex;justify-content:space-between;padding:0 20px;z-index:99;align-items:flex-end}
+#dpad{display:grid;grid-template-columns:60px 60px 60px;gap:5px}
+#dpad button{width:60px;height:60px;font-size:24px;border-radius:15px;background:rgba(255,255,255,.2);color:white;border:2px solid white;touch-action:none}
+#dpad button:active{background:#00ff88;color:black}
+#downBtn{width:80px;height:80px;font-size:14px;border-radius:50%;background:#00aaff;color:white;border:2px solid white;font-weight:bold;touch-action:none}
 </style>
 </head>
 <body>
-<div id="hud">HP: <span id="hp">100</span> | Lantai: <span id="lantai">1</span></div>
+<div id="hud">LANTAI: <span id="lantai">1</span></div>
 <div id="floorName">Lantai 1 - Gerbang Awal</div>
+<div id="hpBarWrap">
+  <div id="hpText">❤️ HP: <span id="hp">100</span> / 100</div>
+  <div id="hpBarBg"><div id="hpBar"></div></div>
+</div>
 <canvas id="game"></canvas>
+
+<div id="controls">
+  <div id="dpad">
+    <div></div><button id="btnUp">⬆️</button><div></div>
+    <button id="btnLeft">⬅️</button><button id="btnDown">⬇️</button><button id="btnRight">➡️</button>
+  </div>
+  <button id="downBtn">TURUN<br>▼</button>
+</div>
+
 <script>
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
 let player={x:canvas.width/2,y:100,r:15,hp:100,speed:6};
 let lantai=1, keys={}, traps=[], boss=null;
-let eyeX=canvas.width/2, eyeY=canvas.height/2;
+
+function updateHP(){
+  let h=Math.max(0,Math.floor(player.hp));
+  document.getElementById('hp').textContent=h;
+  let bar=document.getElementById('hpBar');
+  bar.style.width=h+'%';
+  if(h<30) bar.classList.add('low'); else bar.classList.remove('low');
+}
 function namaLantai(n){
   if(n<=10) return "Gerbang Awal";
   if(n<=20) return "Lorong Gelap";
@@ -33,7 +64,7 @@ function buatLantai(){
   traps=[];
   let jumlah=4+lantai;
   for(let i=0;i<jumlah;i++){
-    traps.push({x:Math.random()*canvas.width, y:100+Math.random()*(canvas.height-200), w:60, h:20, type: Math.random()>0.5?'duri':'lava'});
+    traps.push({x:Math.random()*(canvas.width-60), y:100+Math.random()*(canvas.height-250), w:60, h:20, type: Math.random()>0.5?'duri':'lava'});
   }
   if(lantai%10===0){
     let kuat=lantai/10;
@@ -43,8 +74,23 @@ function buatLantai(){
 buatLantai();
 document.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
 document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
-// Kontrol HP - sentuh layar
-canvas.addEventListener('touchmove',e=>{player.x=e.touches[0].clientX; player.y=e.touches[0].clientY; e.preventDefault();},{passive:false});
+function pegang(id, key){
+  let b=document.getElementById(id);
+  let mulai=(e)=>{e.preventDefault(); keys[key]=true;};
+  let selesai=(e)=>{e.preventDefault(); keys[key]=false;};
+  b.addEventListener('touchstart',mulai,{passive:false});
+  b.addEventListener('touchend',selesai);
+  b.addEventListener('touchcancel',selesai);
+  b.addEventListener('mousedown',mulai);
+  b.addEventListener('mouseup',selesai);
+  b.addEventListener('mouseleave',selesai);
+}
+pegang('btnUp','w');
+pegang('btnDown','s');
+pegang('btnLeft','a');
+pegang('btnRight','d');
+pegang('downBtn','s');
+
 function update(){
   if(keys['w']||keys['arrowup']) player.y-=player.speed;
   if(keys['s']||keys['arrowdown']) player.y+=player.speed;
@@ -54,7 +100,7 @@ function update(){
   player.y=Math.max(20,Math.min(canvas.height-20,player.y));
   traps.forEach(t=>{
     if(player.x>t.x && player.x<t.x+t.w && player.y>t.y-10 && player.y<t.y+t.h+10){
-      player.hp-=0.5; document.getElementById('hp').textContent=Math.floor(player.hp);
+      player.hp-=0.5; updateHP();
     }
   });
   if(boss){
@@ -62,26 +108,29 @@ function update(){
     let jarak=Math.hypot(dx,dy)||1;
     boss.x+=dx/jarak*boss.speed; boss.y+=dy/jarak*boss.speed;
     if(jarak < boss.r+player.r){
-      player.hp-=boss.dmg*0.05; document.getElementById('hp').textContent=Math.floor(player.hp);
+      player.hp-=boss.dmg*0.05; updateHP();
       player.x+=dx/jarak*10; player.y+=dy/jarak*10;
     }
   }
   if(player.hp<=0){alert("KAMU KENA JEBAKAN / BOS DI LANTAI "+lantai); location.reload();}
-  if(player.y>canvas.height-25){
+  if(player.y>canvas.height-45){
     lantai++; player.y=30; player.x=canvas.width/2; player.hp=Math.min(100,player.hp+15);
     document.getElementById('lantai').textContent=lantai;
     document.getElementById('floorName').textContent="Lantai "+lantai+" - "+namaLantai(lantai);
-    document.getElementById('hp').textContent=Math.floor(player.hp);
+    updateHP();
     buatLantai();
   }
 }
 function draw(){
   ctx.fillStyle='#080808'; ctx.fillRect(0,0,canvas.width,canvas.height);
-  eyeX += (player.x-eyeX)*0.02; eyeY += (player.y-eyeY)*0.02;
-  ctx.fillStyle='#1a0000'; ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height/2,180,100,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height/2,120,70,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(eyeX,eyeY,35,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(eyeX,eyeY,15,0,Math.PI*2); ctx.fill();
+  let cx=canvas.width/2, cy=canvas.height/2-50;
+  let dx=player.x-cx, dy=player.y-cy;
+  let j=Math.hypot(dx,dy)||1;
+  let lookX=cx+(dx/j)*25, lookY=cy+(dy/j)*15;
+  ctx.fillStyle='#1a0000'; ctx.beginPath(); ctx.ellipse(cx,cy,180,100,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='white'; ctx.beginPath(); ctx.ellipse(cx,cy,120,70,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(lookX,lookY,35,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(lookX,lookY,15,0,Math.PI*2); ctx.fill();
   traps.forEach(t=>{
     if(t.type==='duri'){
       ctx.fillStyle='#888'; ctx.fillRect(t.x,t.y+t.h-5,t.w,5);
@@ -99,17 +148,18 @@ function draw(){
     ctx.fillStyle='white'; ctx.font='18px Arial'; ctx.fillText(boss.nama,boss.x-70,boss.y-boss.r-10);
   }
   let px=player.x, py=player.y;
-  ctx.strokeStyle='#00ff88'; ctx.lineWidth=4;
-  ctx.beginPath(); ctx.moveTo(px,py+5); ctx.lineTo(px-10,py+25); ctx.moveTo(px,py+5); ctx.lineTo(px+10,py+25); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(px,py-10); ctx.lineTo(px,py+10); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(px,py-5); ctx.lineTo(px-15,py+5); ctx.moveTo(px,py-5); ctx.lineTo(px+15,py+5); ctx.stroke();
-  ctx.fillStyle='#00ff88'; ctx.beginPath(); ctx.arc(px,py-20,12,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(px+4,py-22,2,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#00ff88'; ctx.lineWidth=5;
+  ctx.beginPath(); ctx.moveTo(px,py+8); ctx.lineTo(px-14,py+35); ctx.moveTo(px,py+8); ctx.lineTo(px+14,py+35); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px,py-12); ctx.lineTo(px,py+12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px,py-5); ctx.lineTo(px-20,py+8); ctx.moveTo(px,py-5); ctx.lineTo(px+20,py+8); ctx.stroke();
+  ctx.fillStyle='#00ff88'; ctx.beginPath(); ctx.arc(px,py-28,16,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='black'; ctx.beginPath(); ctx.arc(px+5,py-30,3,0,Math.PI*2); ctx.fill();
   ctx.fillStyle='#00aaff'; ctx.fillRect(0,canvas.height-15,canvas.width,15);
-  ctx.fillStyle='white'; ctx.fillText('TURUN - HINDARI JEBAKAN',canvas.width/2-100,canvas.height-2);
+  ctx.fillStyle='white'; ctx.font='14px Arial'; ctx.fillText('TURUN - HINDARI JEBAKAN',canvas.width/2-90,canvas.height-2);
 }
 function loop(){update(); draw(); requestAnimationFrame(loop);}
 loop();
+updateHP();
 </script>
 </body>
 </html>
