@@ -3,290 +3,71 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>LARI TURUN - NINJA VS MATA!</title>
+<title>THE PIT - LARI TURUN</title>
 <style>
 body{margin:0;background:#000;overflow:hidden;font-family:Arial;color:white;touch-action:none}
-canvas{display:block;width:100vw;height:100vh;background:#222}
-#hud{position:fixed;top:10px;left:10px;font-size:15px;background:rgba(0,0,0,.7);padding:8px 12px;border-radius:10px;z-index:99;line-height:1.5}
-#floorName{position:fixed;top:10px;right:10px;font-size:16px;font-weight:bold;color:#ff4444;z-index:99;background:rgba(0,0,0,.7);padding:8px;border-radius:10px}
-#hpBarWrap{position:fixed;top:78px;left:10px;right:10px;z-index:99}
-#hpText{font-size:18px;font-weight:bold;text-shadow:2px 2px 0 black}
-#hpBarBg{width:100%;height:24px;background:#333;border:3px solid white;border-radius:15px;overflow:hidden}
-#hpBar{width:100%;height:100%;background:lime;transition:width 0.2s}
-#dangerWrap{position:fixed;top:135px;left:10px;right:10px;z-index:99}
-#dangerText{font-size:14px;font-weight:bold;color:#ff4444;text-shadow:2px 2px 0 black;animation:blink 0.5s infinite}
-@keyframes blink{0%{opacity:1}50%{opacity:0.3}100%{opacity:1}}
-#dangerBarBg{width:100%;height:14px;background:#333;border:2px solid #ff4444;border-radius:10px;overflow:hidden}
-#dangerBar{width:0%;height:100%;background:red;transition:width 0.1s}
-#controls{position:fixed;bottom:20px;left:0;right:0;display:flex;justify-content:space-between;padding:0 20px;z-index:99;align-items:flex-end}
+canvas{display:block}
+#hud{position:fixed;top:10px;left:10px;font-size:18px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:10px;z-index:99;display:none}
+#floorName{position:fixed;top:10px;right:10px;font-size:16px;font-weight:bold;color:#ff4444;z-index:99;background:rgba(0,0,0,.6);padding:8px;border-radius:10px;display:none}
+#hpBarWrap{position:fixed;top:50px;left:10px;right:10px;z-index:99;display:none}
+#hpText{font-size:22px;font-weight:bold;margin-bottom:5px;text-shadow:2px 2px 0 black}
+#hpBarBg{width:100%;height:28px;background:#333;border:3px solid white;border-radius:15px;overflow:hidden}
+#hpBar{width:100%;height:100%;background:linear-gradient(90deg,#00ff00,#aaff00);transition:width 0.2s}
+#hpBar.low{background:linear-gradient(90deg,#ff0000,#ff6600)}
+#controls{position:fixed;bottom:30px;left:0;right:0;display:none;justify-content:space-between;padding:0 20px;z-index:99;align-items:flex-end}
 #dpad{display:grid;grid-template-columns:60px 60px 60px;gap:5px}
-#dpad button{width:60px;height:60px;font-size:24px;border-radius:15px;background:rgba(255,255,255,.2);color:white;border:2px solid white}
-#downBtn{width:80px;height:80px;font-size:14px;border-radius:50%;background:#00aaff;color:white;border:2px solid white;font-weight:bold}
-#topBtns{position:fixed;top:165px;right:10px;display:flex;gap:8px;z-index:99;flex-direction:column}
-#topBtns button{width:50px;height:50px;border-radius:50%;background:#333;color:white;border:2px solid white;font-size:22px}
-#pauseBtn{background:#ffaa00 !important}
+#dpad button{width:60px;height:60px;font-size:24px;border-radius:15px;background:rgba(255,255,255,.25);color:white;border:2px solid white;touch-action:none}
+#dpad button:active{background:#00ff88;color:black}
+#downBtn{width:80px;height:80px;font-size:14px;border-radius:50%;background:#00aaff;color:white;border:2px solid white;font-weight:bold;touch-action:none}
+#startScreen{position:fixed;inset:0;background:#000;z-index:1000;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px}
+#startScreen h1{font-size:44px;color:#FFD700;margin:0;line-height:1.1}
+#startBtn{margin-top:30px;padding:18px 35px;font-size:24px;font-weight:bold;background:#ff4444;border:none;border-radius:20px;color:white}
 #celebration{position:fixed;inset:0;display:none;justify-content:center;align-items:center;flex-direction:column;z-index:999;text-align:center;background:rgba(0,0,0,.7)}
 #celebration.show{display:flex}
-#celebTitle{font-size:42px;font-weight:900;color:#FFD700}
-#celebSub{font-size:22px;margin-top:10px}
+#celebTitle{font-size:38px;font-weight:900;color:#FFD700}
+#celebSub{font-size:20px;margin-top:10px}
 #celebBtn{margin-top:20px;padding:15px 30px;font-size:20px;font-weight:bold;background:#00ff88;border:none;border-radius:20px}
 #confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:998;display:none}
-#gameOver{position:fixed;inset:0;display:none;justify-content:center;align-items:center;flex-direction:column;z-index:1000;background:rgba(0,0,0,.9);text-align:center;padding:20px}
-#gameOver.show{display:flex}
-#goTitle{font-size:36px;font-weight:900;color:#ff4444}
-#goScore{font-size:28px;color:#FFD700;margin:10px 0}
-#leaderboard{width:100%;max-width:320px;background:#222;border:2px solid #FFD700;border-radius:15px;padding:12px;text-align:left}
-#leaderboard h3{margin:0 0 8px 0;text-align:center;color:#FFD700}
-#leaderboard ol{margin:0;padding-left:20px}
-#leaderboard li{padding:4px 0;border-bottom:1px solid #333}
-#leaderboard li.me{color:#00ff88;font-weight:bold}
-#restartBtn{margin-top:15px;padding:15px 30px;font-size:20px;font-weight:bold;background:#00ff88;border:none;border-radius:20px}
-#startScreen{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;flex-direction:column;z-index:1001;background:rgba(0,0,0,.95);text-align:center;padding:20px}
-#startScreen.hide{display:none}
-#startTitle{font-size:38px;font-weight:900;color:#FFD700}
-#startSub{margin:15px 0;color:#ccc;line-height:1.6}
-#startBtn{padding:18px 40px;font-size:24px;font-weight:bold;background:#ff4444;color:white;border:none;border-radius:20px}
-#topMini{margin-top:12px;font-size:13px;color:#FFD700}
-#pauseScreen{position:fixed;inset:0;display:none;justify-content:center;align-items:center;flex-direction:column;z-index:1002;background:rgba(0,0,0,.85);text-align:center;padding:20px}
-#pauseScreen.show{display:flex}
-#pauseTitle{font-size:42px;font-weight:900;color:#FFD700}
-#pauseSub{margin:12px 0;color:#ccc;line-height:1.6}
-#pauseScore{font-size:22px;color:#00ff88;margin-bottom:15px}
-.pauseBtn{width:260px;padding:16px;margin:6px 0;font-size:20px;font-weight:bold;border:none;border-radius:20px}
-#resumeBtn{background:#00ff88}
-#restartPauseBtn{background:#ffaa00}
-#leaderPauseBtn{background:#FFD700}
-#homePauseBtn{background:#555;color:white}
-#pauseLeader{width:260px;background:#222;border:2px solid #FFD700;border-radius:15px;padding:10px;text-align:left;display:none;margin-top:10px}
-#pauseLeader h3{margin:0 0 8px 0;text-align:center;color:#FFD700;font-size:16px}
-#pauseLeader ol{margin:0;padding-left:20px;font-size:14px}
 </style>
 </head>
 <body>
-<div id="startScreen">
-  <div id="startTitle">🥷 LARI TURUN<br>VS MATA IBLIS 👁️</div>
-  <div id="startSub">Kamu Ninja! Lari turun secepatnya!<br>Jangan sampai dimakan gerombolan mata!<br><br>⬅️➡️ Gerak | ⬆️ Lompat | ⬇️ TURUN<br>⏸️ Bisa pause kalau lagi sibuk<br>Turun lantai = +100 poin</div>
-  <button id="startBtn" onclick="mulaiGame()">▶️ MULAI MAIN</button>
-  <div id="topMini"></div>
-</div>
-<div id="hud">LANTAI: <span id="lantai">1</span><br>⭐ SKOR: <span id="skor">0</span><br>👁️ MATA: <span id="mataCount">12</span> | ⚡ <span id="speedText">1</span>x</div>
-<div id="floorName">Lantai 1</div>
-<div id="hpBarWrap"><div id="hpText">❤️ HP: <span id="hp">100</span> / 100</div><div id="hpBarBg"><div id="hpBar"></div></div></div>
-<div id="dangerWrap"><div id="dangerText">👁️👁️👁️ MATA MENGEJAR! CEPET TURUN!</div><div id="dangerBarBg"><div id="dangerBar"></div></div></div>
-<div id="topBtns">
-  <button id="pauseBtn" onclick="pauseGame()">⏸️</button>
-  <button onclick="toggleSound()">🔊</button>
+<div id="hud">LANTAI: <span id="lantai">1</span></div>
+<div id="floorName">Lantai 1 - Gerbang Awal</div>
+<div id="hpBarWrap">
+  <div id="hpText">❤️ HP: <span id="hp">100</span> / 100</div>
+  <div id="hpBarBg"><div id="hpBar"></div></div>
 </div>
 <canvas id="game"></canvas>
 <canvas id="confettiCanvas"></canvas>
-<div id="pauseScreen">
-  <div id="pauseTitle">⏸️ PAUSE</div>
-  <div id="pauseSub">Santai dulu, ninja-nya lagi istirahat.<br>Mata-mata juga ikut berhenti kok!</div>
-  <div id="pauseScore"></div>
-  <button class="pauseBtn" id="resumeBtn" onclick="resumeGame()">▶️ LANJUT MAIN</button>
-  <button class="pauseBtn" id="restartPauseBtn" onclick="location.reload()">🔄 ULANG DARI AWAL</button>
-  <button class="pauseBtn" id="leaderPauseBtn" onclick="togglePauseLeader()">🏆 LIAT TOP SKOR</button>
-  <div id="pauseLeader"><h3>🏆 TOP LEADERBOARD</h3><ol id="pauseLeaderList"></ol></div>
-  <button class="pauseBtn" id="homePauseBtn" onclick="keMenu()">🏠 KE MENU UTAMA</button>
+
+<div id="startScreen">
+  <div style="font-size:60px">🥷</div>
+  <h1>LARI TURUN<br>VS MATA IBLIS</h1>
+  <button id="startBtn" onclick="mulaiGame()">▶️ MULAI MAIN</button>
 </div>
-<div id="celebration"><div id="celebTitle">🎉 SELAMAT! 🎉</div><div id="celebSub"></div><button id="celebBtn" onclick="tutupCelebration()">LANJUT MAIN ▶️</button></div>
-<div id="gameOver">
-  <div id="goTitle">💀 GAME OVER 💀</div>
-  <div id="goScore"></div>
-  <div id="leaderboard"><h3>🏆 TOP LEADERBOARD</h3><ol id="leaderList"></ol></div>
-  <button id="restartBtn" onclick="location.reload()">🔄 MAIN LAGI</button>
+
+<div id="celebration">
+  <div id="celebTitle"></div>
+  <div id="celebSub"></div>
+  <button id="celebBtn" onclick="tutupCelebration()">LANJUT MAIN ▶️</button>
 </div>
+
 <div id="controls">
-  <div id="dpad"><div></div><button id="btnUp">⬆️</button><div></div><button id="btnLeft">⬅️</button><button id="btnDown">⬇️</button><button id="btnRight">➡️</button></div>
+  <div id="dpad">
+    <div></div><button id="btnUp">⬆️</button><div></div>
+    <button id="btnLeft">⬅️</button><button id="btnDown">⬇️</button><button id="btnRight">➡️</button>
+  </div>
   <button id="downBtn">TURUN<br>▼</button>
 </div>
+
 <script>
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-let player={x:canvas.width/2,y:300,hp:100,speed:7,vy:0,onGround:false,w:40,h:60,facing:1};
+let player={x:canvas.width/2,y:200,r:15,hp:100,speed:6,vy:0,onGround:false};
 let lantai=1, keys={}, traps=[], boss=null, platforms=[];
-let paused=true, sudah50=false, sudah100=false, isPaused=false, gameStarted=false;
-let scrollSpeed=1.2, danger=0, eyes=[];
-let skor=0;
-let soundOn=true, audioCtx=null, droneOsc=null, droneGain=null;
-function pauseGame(){
-  if(!gameStarted || isPaused) return;
-  isPaused=true; paused=true;
-  document.getElementById('pauseScore').innerHTML=`⭐ SKOR: ${Math.floor(skor)}<br>LANTAI: ${lantai} | HP: ${Math.floor(player.hp)}`;
-  document.getElementById('pauseScreen').classList.add('show');
-  if(droneGain) droneGain.gain.value=0;
-  if(navigator.vibrate) navigator.vibrate(50);
-  keys={};
-}
-function resumeGame(){
-  isPaused=false; paused=false;
-  document.getElementById('pauseScreen').classList.remove('show');
-  if(droneGain && soundOn) droneGain.gain.value=0.04;
-  if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
-}
-function keMenu(){
-  document.getElementById('pauseScreen').classList.remove('show');
-  document.getElementById('startScreen').classList.remove('hide');
-  isPaused=false; paused=true; gameStarted=false;
-  tampilkanTopAwal();
-}
-function togglePauseLeader(){
-  let el=document.getElementById('pauseLeader');
-  if(el.style.display==='block'){ el.style.display='none'; return; }
-  let list=getLeaderboard();
-  let html='';
-  if(!list.length) html='<li>Belum ada skor</li>';
-  else list.forEach((p,i)=>{ let medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.'; html+=`<li>${medal} ${p.nama} - ${p.skor} pts (Lt.${p.lantai})</li>`; });
-  document.getElementById('pauseLeaderList').innerHTML=html;
-  el.style.display='block';
-}
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden && gameStarted && !isPaused && !document.getElementById('gameOver').classList.contains('show')){
-    pauseGame();
-    document.getElementById('pauseSub').innerHTML='Kamu pindah aplikasi / layar mati.<br>Game otomatis di-pause biar gak mati konyol!';
-  }
-});
-window.addEventListener('blur',()=>{
-  if(gameStarted && !isPaused && !document.getElementById('gameOver').classList.contains('show')) pauseGame();
-});
-document.addEventListener('keydown',e=>{
-  if(e.key.toLowerCase()==='p' && gameStarted){
-    if(isPaused) resumeGame(); else pauseGame();
-  }
-  if(e.key==='Escape' && isPaused) resumeGame();
-});
-function initAudio(){
-  if(audioCtx) return;
-  try{
-    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    droneOsc=audioCtx.createOscillator(); droneOsc.type='sawtooth'; droneOsc.frequency.value=55;
-    let droneOsc2=audioCtx.createOscillator(); droneOsc2.type='sine'; droneOsc2.frequency.value=58;
-    droneGain=audioCtx.createGain(); droneGain.gain.value=0.04;
-    let filter=audioCtx.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value=200;
-    droneOsc.connect(filter); droneOsc2.connect(filter); filter.connect(droneGain); droneGain.connect(audioCtx.destination);
-    droneOsc.start(); droneOsc2.start();
-  }catch(e){}
-}
-function bunyi(freq, dur, type='square', vol=0.15){
-  if(!soundOn || !audioCtx || isPaused) return;
-  let o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type=type; o.frequency.value=freq; g.gain.value=vol;
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start(); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
-  o.stop(audioCtx.currentTime+dur);
-}
-function bunyiJebakan(){ bunyi(800,0.15,'sawtooth',0.2); setTimeout(()=>bunyi(300,0.2,'sawtooth',0.2),80); }
-function bunyiTurun(){ bunyi(400,0.1,'square',0.15); setTimeout(()=>bunyi(600,0.15,'square',0.15),80); }
-function bunyiMata(){ bunyi(1200,0.2,'sine',0.1); setTimeout(()=>bunyi(1400,0.2,'sine',0.1),100); }
-function bunyiJantung(){ if(danger>60) bunyi(60,0.15,'sine',0.25); }
-function toggleSound(){ soundOn=!soundOn; document.querySelector('#topBtns button:nth-child(2)').textContent=soundOn?'🔊':'🔇'; if(droneGain) droneGain.gain.value=(soundOn && !isPaused)?0.04:0; }
-function mulaiGame(){ initAudio(); document.getElementById('startScreen').classList.add('hide'); paused=false; gameStarted=true; isPaused=false; if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); }
-function getLeaderboard(){ try{ return JSON.parse(localStorage.getItem('lariTurunLeaderboard')||'[]'); }catch(e){ return []; } }
-function simpanSkor(){
-  let list=getLeaderboard();
-  let nama = localStorage.getItem('ninjaNama') || ('NINJA-'+Math.floor(Math.random()*999));
-  localStorage.setItem('ninjaNama', nama);
-  list.push({nama:nama, skor:Math.floor(skor), lantai:lantai, tanggal:new Date().toLocaleDateString('id-ID')});
-  list.sort((a,b)=>b.skor-a.skor); list=list.slice(0,10);
-  localStorage.setItem('lariTurunLeaderboard', JSON.stringify(list));
-  return {list, rank: list.findIndex(x=>x.skor===Math.floor(skor) && x.lantai===lantai)};
-}
-function tampilkanLeaderboard(){
-  let data=simpanSkor();
-  let html='';
-  data.list.forEach((p,i)=>{ let cls=(p.skor===Math.floor(skor) && p.lantai===lantai)?'class="me"':''; let medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.'; html+=`<li ${cls}>${medal} ${p.nama} - ${p.skor} pts (Lt.${p.lantai})</li>`; });
-  document.getElementById('leaderList').innerHTML=html || '<li>Belum ada skor</li>';
-  document.getElementById('goScore').innerHTML=`SKOR KAMU: <b>${Math.floor(skor)}</b><br>LANTAI: ${lantai}<br>${data.rank!==-1 && data.rank<5 ? '🎉 MASUK TOP 5! KEREN!' : 'Coba lagi biar masuk Top 5!'}`;
-  let topHtml='🏆 TOP 3: '; data.list.slice(0,3).forEach((p,i)=>{ topHtml+=`${i+1}. ${p.nama} (${p.skor}) `; }); document.getElementById('topMini').textContent=topHtml;
-}
-function tampilkanTopAwal(){
-  let list=getLeaderboard();
-  if(list.length){ let t='🏆 TOP 3: '; list.slice(0,3).forEach((p,i)=>{ t+=`${i+1}. ${p.nama} (${p.skor}) `; }); document.getElementById('topMini').textContent=t; }
-  else document.getElementById('topMini').textContent='🏆 Belum ada skor, jadi yang pertama!';
-}
-tampilkanTopAwal();
-function gameOver(alasan){
-  paused=true; gameStarted=false;
-  bunyi(100,0.5,'sawtooth',0.25);
-  tampilkanLeaderboard();
-  document.getElementById('goTitle').textContent=alasan;
-  document.getElementById('gameOver').classList.add('show');
-}
-function buatMata(){
-  eyes=[];
-  let jumlah=10+Math.floor(lantai/5); if(jumlah>25) jumlah=25;
-  for(let i=0;i<jumlah;i++){ eyes.push({x:Math.random()*canvas.width,y:Math.random()*180,r:12+Math.random()*10,vx:(Math.random()-0.5)*1.5,vy:0.5+Math.random()*0.8,wobble:Math.random()*100,warna:['red','#ff3300','#ff00ff','#ff6600'][Math.floor(Math.random()*4)]}); }
-  document.getElementById('mataCount').textContent=jumlah;
-}
-buatMata();
+let paused=true, sudahRayain50=false, sudahRayain100=false;
 const confetti=document.getElementById('confettiCanvas');
 const cctx=confetti.getContext('2d');
 confetti.width=window.innerWidth; confetti.height=window.innerHeight;
-let confettiParts=[];
-function mulaiConfetti(api=false){
-  confetti.style.display='block'; confettiParts=[];
-  let warna=api?['#ff0000','#ff6600','#FFD700']:['#FFD700','#00ff88','#00aaff'];
-  for(let i=0;i<150;i++) confettiParts.push({x:Math.random()*confetti.width,y:-20-Math.random()*300,vx:(Math.random()-0.5)*6,vy:2+Math.random()*5,s:6+Math.random()*8,c:warna[Math.floor(Math.random()*warna.length)]});
-  animConf();
-}
-function animConf(){
-  if(!confettiParts.length) return;
-  cctx.clearRect(0,0,confetti.width,confetti.height);
-  confettiParts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;cctx.fillStyle=p.c;cctx.fillRect(p.x,p.y,p.s,p.s);});
-  confettiParts=confettiParts.filter(p=>p.y<confetti.height+20);
-  if(confettiParts.length) requestAnimationFrame(animConf); else confetti.style.display='none';
-}
-function showCeleb(j,s,api=false){ paused=true; document.getElementById('celebTitle').innerHTML=j; document.getElementById('celebSub').innerHTML=s; document.getElementById('celebration').classList.add('show'); mulaiConfetti(api); bunyi(800,0.3,'square',0.2); }
-function tutupCelebration(){ document.getElementById('celebration').classList.remove('show'); if(!isPaused) paused=false; }
-function updateHP(){ let h=Math.max(0,Math.floor(player.hp)); document.getElementById('hp').textContent=h; document.getElementById('hpBar').style.width=h+'%'; }
-function updateDanger(){ document.getElementById('dangerBar').style.width=danger+'%'; }
-function updateSkor(){ document.getElementById('skor').textContent=Math.floor(skor); }
-function buatLantai(){
-  traps=[]; platforms=[];
-  let y=250; while(y<canvas.height+200){ platforms.push({x:0,y:y,w:canvas.width,h:30}); y+=130; }
-  for(let i=0;i<3+lantai;i++){ let p=platforms[Math.floor(Math.random()*platforms.length)]; traps.push({x:50+Math.random()*(canvas.width-150), y:p.y-22, w:60, h:22, type: Math.random()>0.5?'duri':'lava'}); }
-  if(lantai%10===0){ let k=lantai/10; boss={x:canvas.width/2,y:canvas.height-250,r:40+k*5,speed:1.5+k*0.4,dmg:15+k*5,nama:"BOS "+lantai}; } else boss=null;
-  scrollSpeed=1.2+lantai*0.08; document.getElementById('speedText').textContent=(1+lantai*0.08).toFixed(1); buatMata();
-}
-buatLantai();
-document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true; if(!audioCtx) initAudio();});
-document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
-function pegang(id,key){ let b=document.getElementById(id); let s=(e)=>{e.preventDefault();keys[key]=true; if(!audioCtx) initAudio();}; let e=(e)=>{e.preventDefault();keys[key]=false;}; b.addEventListener('touchstart',s,{passive:false}); b.addEventListener('touchend',e); b.addEventListener('mousedown',s); b.addEventListener('mouseup',e); }
-pegang('btnUp','w'); pegang('btnDown','s'); pegang('btnLeft','a'); pegang('btnRight','d'); pegang('downBtn','s');
-let lastTime=Date.now();
-function update(){
-  if(paused) return;
-  let now=Date.now(); if(now-lastTime>100){ skor+=1; lastTime=now; updateSkor(); }
-  if(Math.random()>0.98) bunyiJantung();
-  platforms.forEach(p=>{ p.y-=scrollSpeed; }); traps.forEach(t=>{ t.y-=scrollSpeed; });
-  platforms.forEach(p=>{ if(p.y<-40){ p.y=canvas.height+80; if(Math.random()>0.4) traps.push({x:50+Math.random()*(canvas.width-150), y:p.y-22, w:60, h:22, type: Math.random()>0.5?'duri':'lava'}); } });
-  player.y-=scrollSpeed;
-  let mataDeket=false;
-  eyes.forEach(m=>{
-    m.wobble+=0.05; m.x+=m.vx+Math.sin(m.wobble)*0.8; m.y+=m.vy+scrollSpeed*0.6;
-    if(player.x>m.x) m.x+=0.3; else m.x-=0.3;
-    if(m.x<0) m.x=0; if(m.x>canvas.width) m.x=canvas.width;
-    if(m.y>canvas.height+30){ m.y=-20-Math.random()*100; m.x=Math.random()*canvas.width; }
-    let dx=player.x+20-m.x, dy=player.y+20-m.y; let j=Math.hypot(dx,dy);
-    if(j<90) mataDeket=true;
-    if(j<35){ player.hp-=0.4; updateHP(); if(Math.random()>0.95) bunyiMata(); }
-  });
-  if(mataDeket){ danger+=0.5; updateDanger(); if(navigator.vibrate && Math.random()>0.95) navigator.vibrate(40); }
-  else { danger=Math.max(0,danger-0.3); updateDanger(); }
-  if(danger>=100){ gameOver("💀 DIMAKAN GEROMBOLAN MATA! 👁️👁️👁️"); return; }
-  if(keys['a']){ player.x-=player.speed; player.facing=-1; }
-  if(keys['d']){ player.x+=player.speed; player.facing=1; }
-  if(keys['w'] && player.onGround){ player.vy=-14; player.onGround=false; bunyi(500,0.1,'square',0.1); }
-  let drop=keys['s']; player.vy+=0.7; player.y+=player.vy; player.onGround=false;
-  if(!drop){ platforms.forEach(p=>{ if(player.x+player.w>p.x && player.x<p.x+p.w && player.y+player.h>=p.y && player.y+player.h<=p.y+22 && player.vy>=0){ player.y=p.y-player.h; player.vy=0; player.onGround=true; } }); }
-  player.x=Math.max(0,Math.min(canvas.width-player.w,player.x));
-  if(player.y>canvas.height-50){
-    lantai++; skor+=100; player.y=180; player.x=canvas.width/2; player.vy=0; player.hp=Math.min(100,player.hp+20); danger=0;
-    document.getElementById('lantai').textContent=lantai; document.getElementById('floorName').textContent="Lantai "+lantai;
-    updateHP(); updateDanger(); updateSkor(); buatLantai(); bunyiTurun();
-    if(lantai===50 && !sudah50){ sudah50=true; setTimeout(()=>showCeleb("🎉 LANTAI 50! 🎉","KAMU SAMPAI JANTUNG NERAKA!"),300); player.hp=100; updateHP(); }
-    if(lantai===100 && !sudah100){ sudah100=true; setTimeout(()=>showCeleb("👑 LANTAI 100! 👑","KAMU TAMATKAN NERAKA!",true),300); player.hp=100; updateHP(); }
-  }
-  traps.forEach(t=>{ if(player.x+player.w>t.x && player.x<t.x+t.w && player.y+player.h>t.y && player.y<t.y+t.h){ player.hp-=0.5; updateHP(); if(Math.random()>0.9) bunyiJebakan(); } });
-  if(boss){ let dx=player.x-boss.x, dy=player.y-boss.y; let j=Math.hypot(dx,dy)||1; boss.x+=dx/j*boss.speed; boss.y+=dy/j*boss.speed; boss.y-
+let conf
