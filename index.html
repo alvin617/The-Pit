@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>THE PIT - Turun Ke Neraka</title>
+<title>LARI TURUN - Hindari Jebakan & Bos</title>
 <style>
 body{margin:0;background:#000;overflow:hidden;font-family:Arial;color:white}
 canvas{display:block}
@@ -11,16 +11,15 @@ canvas{display:block}
 </style>
 </head>
 <body>
-<div id="hud">❤️ HP: <span id="hp">100</span> | 🔫 Lantai: <span id="lantai">1</span> | 💀 Kill: <span id="kill">0</span></div>
+<div id="hud">❤️ HP: <span id="hp">100</span> | 🔫 Lantai: <span id="lantai">1</span></div>
 <div id="floorName">Lantai 1 - Gerbang Awal</div>
 <canvas id="game"></canvas>
 <script>
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
 canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-let player={x:canvas.width/2,y:canvas.height/2,r:20,hp:100,speed:5};
-let bullets=[], enemyBullets=[], enemies=[], boss=null;
-let lantai=1, kill=0, keys={};
+let player={x:canvas.width/2,y:100,r:15,hp:100,speed:6};
+let lantai=1, keys={}, traps=[], boss=null, bossBullets=[];
 let eyeX=canvas.width/2, eyeY=canvas.height/2;
 
 function namaLantai(n){
@@ -28,141 +27,30 @@ function namaLantai(n){
   if(n<=20) return "Lorong Gelap";
   if(n<=30) return "Sarung Mata Iblis";
   if(n<=40) return "Lautan Darah";
-  if(n<=50) return "Ruang Penyiksaan";
-  if(n<=60) return "Jantung Neraka";
-  if(n<=70) return "Kegelapan Abadi";
-  if(n<=80) return "Tahta Kegelapan";
-  if(n<=90) return "Mata Terakhir";
-  return "DASAR NERAKA - THE PIT";
+  if(n<=50) return "Jantung Neraka";
+  if(n<=60) return "Kegelapan Abadi";
+  return "DASAR NERAKA";
 }
 
-function spawnMusuh(){
-  enemies=[];
-  if(lantai%10===0){
-    // BOS SETIAP 10 LANTAI - SEMAKIN DALAM SEMAKIN KUAT
-    let kekuatan = lantai/10;
-    boss={x:canvas.width/2,y:100,r:50+ kekuatan*5, hp:200 + kekuatan*300, maxHp:200 + kekuatan*300, dmg:10 + kekuatan*5, shootTimer:0, nama:"BOS LANTAI "+lantai+" - "+namaLantai(lantai)};
-  } else {
-    boss=null;
-    let jumlah = 3 + Math.floor(lantai/2);
-    for(let i=0;i<jumlah;i++){
-      enemies.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height/2,r:18,hp:20+lantai*3,shootTimer:Math.random()*100});
-    }
+function buatLantai(){
+  traps=[];
+  // JEBAKAN - makin dalam makin banyak
+  let jumlahJebakan = 4 + lantai;
+  for(let i=0;i<jumlahJebakan;i++){
+    traps.push({x:Math.random()*canvas.width, y:100+Math.random()*(canvas.height-200), w:60, h:20, type: Math.random()>0.5?'duri':'lava'});
   }
+  // BOS SETIAP 10 LANTAI - KEJAR PLAYER
+  if(lantai%10===0){
+    let kuat = lantai/10;
+    boss={x:canvas.width/2,y:canvas.height-150,r:40+kuat*5, hp:100, speed:1.5+kuat*0.4, dmg:15+kuat*5, nama:"BOS LANTAI "+lantai};
+  } else boss=null;
 }
-spawnMusuh();
+buatLantai();
 
-document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true; if(e.code==='Space') tembak();});
-document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
-canvas.addEventListener('click',e=>{tembak(e.clientX,e.clientY)});
-
-function tembak(tx,ty){
-  let angle = tx!==undefined ? Math.atan2(ty-player.y,tx-player.x) : -Math.PI/2;
-  bullets.push({x:player.x,y:player.y,dx:Math.cos(angle)*10,dy:Math.sin(angle)*10});
-}
+document.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
+document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 
 function update(){
   if(keys['w']||keys['arrowup']) player.y-=player.speed;
   if(keys['s']||keys['arrowdown']) player.y+=player.speed;
-  if(keys['a']||keys['arrowleft']) player.x-=player.speed;
-  if(keys['d']||keys['arrowright']) player.x+=player.speed;
-
-  // TURUN LANTAI - jika sampai bawah layar
-  if(player.y>canvas.height-10){
-    lantai++;
-    player.y=20;
-    player.hp=Math.min(100,player.hp+20); // heal dikit
-    document.getElementById('lantai').textContent=lantai;
-    document.getElementById('floorName').textContent="Lantai "+lantai+" - "+namaLantai(lantai);
-    spawnMusuh();
-  }
-
-  // Gerak peluru player
-  bullets.forEach((b,i)=>{
-    b.x+=b.dx; b.y+=b.dy;
-    // Kena musuh
-    enemies.forEach((en,ei)=>{
-      if(Math.hypot(b.x-en.x,b.y-en.y)<en.r+5){en.hp-=10; bullets.splice(i,1); if(en.hp<=0){enemies.splice(ei,1); kill++;}}
-    });
-    if(boss && Math.hypot(b.x-boss.x,b.y-boss.y)<boss.r+5){boss.hp-=10; bullets.splice(i,1); if(boss.hp<=0){kill+=10; boss=null;}}
-  });
-  bullets=bullets.filter(b=>b.x>0&&b.x<canvas.width&&b.y>0&&b.y<canvas.height);
-
-  // MUSUH NEMBAK
-  enemies.forEach(en=>{
-    en.shootTimer--;
-    if(en.shootTimer<=0){
-      en.shootTimer=80 - Math.min(50,lantai*2);
-      let a=Math.atan2(player.y-en.y,player.x-en.x);
-      enemyBullets.push({x:en.x,y:en.y,dx:Math.cos(a)*(3+lantai*0.1),dy:Math.sin(a)*(3+lantai*0.1)});
-    }
-  });
-  if(boss){
-    boss.shootTimer--;
-    if(boss.shootTimer<=0){
-      boss.shootTimer=40;
-      for(let i=0;i<5;i++){
-        let a=Math.atan2(player.y-boss.y,player.x-boss.x)+ (i-2)*0.2;
-        enemyBullets.push({x:boss.x,y:boss.y,dx:Math.cos(a)*5,dy:Math.sin(a)*5});
-      }
-    }
-    // Bos gerak ke player
-    boss.x+=Math.sign(player.x-boss.x)*1.5;
-  }
-
-  enemyBullets.forEach((b,i)=>{
-    b.x+=b.dx; b.y+=b.dy;
-    if(Math.hypot(b.x-player.x,b.y-player.y)<player.r+5){
-      player.hp-= boss? boss.dmg : 5;
-      enemyBullets.splice(i,1);
-      document.getElementById('hp').textContent=player.hp;
-      if(player.hp<=0){alert("KAMU MATI DI LANTAI "+lantai+"! Kill: "+kill); location.reload();}
-    }
-  });
-  document.getElementById('kill').textContent=kill;
-}
-
-function draw(){
-  ctx.fillStyle='#050505'; ctx.fillRect(0,0,canvas.width,canvas.height);
-  // MATA BESAR DI BELAKANG LAYAR
-  eyeX += (player.x - eyeX)*0.02;
-  eyeY += (player.y - eyeY)*0.02;
-  ctx.fillStyle='#1a0000';
-  ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height/2,400,220,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='white';
-  ctx.beginPath(); ctx.ellipse(canvas.width/2,canvas.height/2,260,160,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='red';
-  ctx.beginPath(); ctx.arc(eyeX,eyeY,80,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='black';
-  ctx.beginPath(); ctx.arc(eyeX,eyeY,35,0,Math.PI*2); ctx.fill();
-
-  // Player
-  ctx.fillStyle='#00ff88'; ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='white'; ctx.font='12px Arial'; ctx.fillText('KAMU',player.x-18,player.y+35);
-
-  // Musuh
-  ctx.fillStyle='#ff2222';
-  enemies.forEach(en=>{ctx.beginPath(); ctx.arc(en.x,en.y,en.r,0,Math.PI*2); ctx.fill(); ctx.fillStyle='white'; ctx.fillText(en.hp,en.x-10,en.y-25); ctx.fillStyle='#ff2222';});
-
-  // Bos
-  if(boss){
-    ctx.fillStyle='#ff00ff'; ctx.beginPath(); ctx.arc(boss.x,boss.y,boss.r,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='white'; ctx.font='20px Arial'; ctx.fillText(boss.nama,boss.x-120,boss.y-boss.r-10);
-    ctx.fillStyle='red'; ctx.fillRect(boss.x-100,boss.y-boss.r-30,200,10);
-    ctx.fillStyle='lime'; ctx.fillRect(boss.x-100,boss.y-boss.r-30,200*(boss.hp/boss.maxHp),10);
-  }
-
-  // Peluru
-  ctx.fillStyle='yellow'; bullets.forEach(b=>{ctx.beginPath(); ctx.arc(b.x,b.y,5,0,Math.PI*2); ctx.fill();});
-  ctx.fillStyle='orange'; enemyBullets.forEach(b=>{ctx.beginPath(); ctx.arc(b.x,b.y,6,0,Math.PI*2); ctx.fill();});
-
-  // Pintu turun
-  ctx.fillStyle='#00aaff'; ctx.fillRect(0,canvas.height-15,canvas.width,15);
-  ctx.fillStyle='white'; ctx.fillText('▼ TURUN KE LANTAI BERIKUTNYA ▼',canvas.width/2-120,canvas.height-2);
-}
-
-function loop(){update(); draw(); requestAnimationFrame(loop);}
-loop();
-</script>
-</body>
-  </html>
+ 
